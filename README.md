@@ -1,0 +1,2 @@
+# MSP430F5529_BASIC_PROJECT
+ msp430f5529用库函数写的一些库
