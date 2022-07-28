@@ -151,6 +151,21 @@ int fputs(const char *_ptr, register FILE *_fp)
 
   return len;
 }
+//#pragma vector=USCI_A1_VECTOR
+//__interrupt void USCI_A1_ISR (void)
+//{
+//    uint8_t receivedData = 0;
+//    switch (__even_in_range(UCA1IV,4))
+//    {
+//        //Vector 2 - RXIFG
+//        case 2:
+//            receivedData = USCI_A_UART_receiveData(USCI_A1_BASE);
+//            USCI_A_UART_transmitData(USCI_A1_BASE,receivedData);
+//            break;
+//        default:
+//            break;
+//    }
+//}
 
 
 

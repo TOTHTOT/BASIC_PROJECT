@@ -51,6 +51,9 @@
 								<option id="com.ti.ccstudio.buildDefinitions.MSP430_18.1.compilerID.DIAG_WRAP.936151035" name="Wrap diagnostic messages (--diag_wrap)" superClass="com.ti.ccstudio.buildDefinitions.MSP430_18.1.compilerID.DIAG_WRAP" useByScannerDiscovery="false" value="com.ti.ccstudio.buildDefinitions.MSP430_18.1.compilerID.DIAG_WRAP.off" valueType="enumerated"/>
 								<option id="com.ti.ccstudio.buildDefinitions.MSP430_18.1.compilerID.INCLUDE_PATH.2081435824" name="Add dir to #include search path (--include_path, -I)" superClass="com.ti.ccstudio.buildDefinitions.MSP430_18.1.compilerID.INCLUDE_PATH" valueType="includePath">
 									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/APP/MPU6050}"/>
+									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/APP/GRAYSENSOR}"/>
+									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/APP/PID}"/>
+									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/APP/PID}"/>
 									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/APP/TB6612FNG}"/>
 									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/APP/MPU6050/eMPL}"/>
 									<listOptionValue builtIn="false" value="${MSP430_DRIVERLIB_INCLUDE_PATH}"/>

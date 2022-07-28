@@ -14,6 +14,7 @@ void TimerB_Init(void);
 void TimerA0_PWM_Init(void);
 void TimerA1_PWM_Init(void);
 void TimerA2_Capture_Init(void);
+void Timer_A_Init(void);
 
 
 
