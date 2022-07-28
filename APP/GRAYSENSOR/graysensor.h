@@ -13,8 +13,8 @@
 #define MID_GRAYSENSOR GPIO_getInputPinValue(GPIO_PORT_P2, GPIO_PIN5)
 #define LIFT_GRAYSENSOR GPIO_getInputPinValue(GPIO_PORT_P4, GPIO_PIN3)
 #define RIGHT_GRAYSENSOR GPIO_getInputPinValue(GPIO_PORT_P7, GPIO_PIN4)
-
-
+extern uint8_t huidu_l_en, huidu_r_en;
+extern short graysensor;
 short Car_Staright_Control(void);
 
 

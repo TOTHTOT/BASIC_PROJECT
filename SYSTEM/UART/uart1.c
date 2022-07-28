@@ -5,6 +5,15 @@
  *      Author: TOTHTOT
  */
 #include "uart1.h"
+#include "stdio.h"
+#include "tb6612.h"
+#include "stdarg.h"
+#include "stdio.h"
+#include "string.h"
+#include "stdlib.h"
+#include "graysensor.h"
+#include "beep.h"
+
 /* 串口初始化
  * 参数:baseAddress:为USCI_A0_BASE或USCI_A1_BASE, Baudrate:波特率
  * */
@@ -85,24 +94,106 @@ void u1_printf(unsigned char *ptr)    //Send string.
     }
 }
 
+void u0_printf(unsigned char *ptr)    //Send string.
+{
+    while(*ptr != '\0')
+    {
+        USCI_A_UART_transmitData(USCI_A0_BASE,*ptr);
+        ptr++;
+    }
+}
+
+
 //******************************************************************************
 //
 //This is the USCI_A0 interrupt vector service routine.
 //
 //******************************************************************************
+uint8_t USART0_RX_BUF[USART0_REC_LEN]; //接收缓冲,最大USART_REC_LEN个字节.
+uint16_t USART0_RX_STA = 0; //接收状态标记
 #pragma vector=USCI_A0_VECTOR
 __interrupt void USCI_A0_ISR (void)
 {
     uint8_t receivedData = 0;
+    uint8_t temp[3];
+    uint8_t *p;
+//    printf("USCI_A0_ISR\r\n");
     switch (__even_in_range(UCA0IV,4))
     {
-        //Vector 2 - RXIFG
-        case 2:
-            receivedData = USCI_A_UART_receiveData(USCI_A0_BASE);
-            USCI_A_UART_transmitData(USCI_A0_BASE,receivedData);
-            break;
-        default:
-            break;
+    //Vector 2 - RXIFG
+    case 2:
+        receivedData = USCI_A_UART_receiveData(USCI_A0_BASE);
+        USCI_A_UART_transmitData(USCI_A0_BASE, receivedData);
+//        printf("USCI_A0_ISR\r\n");
+//        if (receivedData == 0x01)
+//        {
+//            // 接收到头帧0xfd,从头开始接收
+//            USART0_RX_STA = 0;
+//        }
+        if ((USART0_RX_STA & 0x8000) == 0) //接收未完成
+        {
+            if (USART0_RX_STA & 0x4000) //接收到了0x0d
+            {
+                if (receivedData != 0x0a)
+                    USART0_RX_STA = 0; //接收错误,重新开始
+                else
+                    USART0_RX_STA |= 0x8000; //接收完成了
+            }
+            else //还没收到0X0D
+            {
+                if (receivedData == 0x0d)
+                    USART0_RX_STA |= 0x4000;
+                else
+                {
+                    USART0_RX_BUF[USART0_RX_STA & 0X3FFF] = receivedData;
+                    USART0_RX_STA++;
+                    if (USART0_RX_STA > (USART0_REC_LEN - 1))
+                        USART0_RX_STA = 0; //接收数据错误,重新开始接收
+                }
+            }
+        }
+        //接收完成作相应处理
+        if ((USART0_RX_STA & 0x8000))
+        {
+            u0_printf("接收完成\r\n");
+            if(p = strstr(USART0_RX_BUF, "so")!=NULL)
+            {
+                 p++;
+                 memcpy(temp, p, 3);
+                graysensor = atoi(temp);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    printf("gray:%d\r\n", graysensor);
+            }
+            else if(p = strstr(USART0_RX_BUF, "go")!=NULL)
+            {
+//                Car_Go_Speed(&Car_1, 200);
+            }
+            else if (p = strstr(USART0_RX_BUF, "stop") != NULL)
+            {
+                Car_Stop(&Car_1);
+            }
+//            if()
+//            printf("接收数据为:%s", USART_RX_BUF);
+            if(USART0_RX_BUF[0]==0x01)
+            {
+
+                Get_Data_From_Buf(USART0_RX_BUF, 1, ",", &OPENMV_Data);
+                if(OPENMV_Data.L_or_R == 1)
+                {
+                    huidu_l_en = huidu_r_en = 0;
+                    beep_en= 1;
+                    printf("接收到停止灰度指令\r\n");
+                }
+
+//                printf("LoR:%d\r\n", OPENMV_Data.x);
+//                printf("y:%d\r\n", OPENMV_Data.y);
+            }
+
+            USART0_RX_STA = 0;
+            memset((char*) USART0_RX_BUF, '0', strlen(USART0_RX_BUF));
+        }
+        break;
+    default:
+        break;
     }
 }
 
@@ -111,16 +202,53 @@ __interrupt void USCI_A0_ISR (void)
 //This is the USCI_A1 interrupt vector service routine.
 //
 //******************************************************************************
+uint8_t USART_RX_BUF[USART_REC_LEN]; //接收缓冲,最大USART_REC_LEN个字节.
+uint16_t USART_RX_STA = 0; //接收状态标记
 #pragma vector=USCI_A1_VECTOR
 __interrupt void USCI_A1_ISR (void)
 {
     uint8_t receivedData = 0;
-    switch (__even_in_range(UCA1IV,4))
+
+    switch (__even_in_range(UCA1IV, 4))
     {
-        //Vector 2 - RXIFG
-        case 2:
-            receivedData = USCI_A_UART_receiveData(USCI_A1_BASE);
-            USCI_A_UART_transmitData(USCI_A1_BASE,receivedData);
+    //Vector 2 - RXIFG
+    case 2:
+        receivedData = USCI_A_UART_receiveData(USCI_A1_BASE);
+//        USCI_A_UART_transmitData(USCI_A1_BASE, receivedData);
+        if (receivedData == 0xfd)
+        {
+            // 接收到头帧0xfd,从头开始接收
+            USART_RX_STA = 0;
+        }
+        if ((USART_RX_STA & 0x8000) == 0) //接收未完成
+        {
+            if (USART_RX_STA & 0x4000) //接收到了0x0d
+            {
+                if (receivedData != 0x0a)
+                    USART_RX_STA = 0; //接收错误,重新开始
+                else
+                    USART_RX_STA |= 0x8000; //接收完成了
+            }
+            else //还没收到0X0D
+            {
+                if (receivedData == 0x0d)
+                    USART_RX_STA |= 0x4000;
+                else
+                {
+                    USART_RX_BUF[USART_RX_STA & 0X3FFF] = receivedData;
+                    USART_RX_STA++;
+                    if (USART_RX_STA > (USART_REC_LEN - 1))
+                        USART_RX_STA = 0; //接收数据错误,重新开始接收
+                }
+            }
+        }
+        //接收完成作相应处理
+        if((USART_RX_STA & 0x8000))
+        {
+            printf("接收数据为:%s", USART_RX_BUF);
+            USART_RX_STA = 0;
+            memset((char*)USART_RX_BUF, '0', strlen(USART_RX_BUF));
+        }
             break;
         default:
             break;
@@ -151,21 +279,59 @@ int fputs(const char *_ptr, register FILE *_fp)
 
   return len;
 }
-//#pragma vector=USCI_A1_VECTOR
-//__interrupt void USCI_A1_ISR (void)
-//{
-//    uint8_t receivedData = 0;
-//    switch (__even_in_range(UCA1IV,4))
-//    {
-//        //Vector 2 - RXIFG
-//        case 2:
-//            receivedData = USCI_A_UART_receiveData(USCI_A1_BASE);
-//            USCI_A_UART_transmitData(USCI_A1_BASE,receivedData);
-//            break;
-//        default:
-//            break;
-//    }
-//}
+
+
+S_CAMERA_H OPENMV_Data;
+/**
+ * @name: Get_Data_From_Buf
+ * @msg: 从缓存中解析数据,解析一个数据最大为6位数
+ * @param {uint8_t} *buf 要解析的字符串
+ * @param {uint8_t} times 解析次数
+ * @param {uint8_t} key_word 解析关键字
+ * @param {S_CAMERA_H} *camera 存放解析完成的数据的结构体
+ * @return {*}
+ */
+void Get_Data_From_Buf(uint8_t *buf, uint8_t times, uint8_t *key_word, S_CAMERA_H *camera)
+{
+    uint8_t *temp_p;     //第一个 "key_word"的位置
+    uint8_t *temp_pp;    //第二个 "key_word"的位置
+    uint8_t temp[6];     //解析出来的字符串
+    uint8_t i;
+    for (i = 0; i < times; i++)
+    {
+        // u1_printf("i:%d\r\n", i);
+        // 01 2c 31 38 32 2c 32 39 2c 0d 0a
+        if((temp_p = (uint8_t *)strstr(( char*)buf, ( char*)key_word))!=NULL) //寻找第一个 "key_word"
+        {
+            // u1_printf("11\r\n");
+            temp_p++;
+            if((temp_pp = (uint8_t *)strstr(( char*)temp_p, ( char*)key_word))!= NULL)//寻找第二个 "key_word",如果有的话
+            {
+                // u1_printf("22\r\n");
+                memcpy(temp, temp_p, temp_pp- temp_p);
+                if(i == 0)
+                    camera->L_or_R = atoi(( char*)temp);         //字符串转为整型
+                else if(i == 1)
+                    camera->output = atoi(( char*)temp);         //字符串转整型
+                else
+                    u0_printf("没有定义第三个参数Get_Data_From_Buf\r\n");
+                // u1_printf("1:temp:%s, x:%d, y:%d\r\ntemp_p:%s, temp_pp:%s\r\n", temp, camera->x, camera->y, temp_p, temp_pp);
+                buf = temp_pp;
+                // u1_printf("2:temp:%s, x:%d, y:%d\r\ntemp_p:%s, temp_pp:%s\r\n", temp, camera->x, camera->y, temp_p, temp_pp);
+                memset(temp, '\0', sizeof(temp));
+            }
+            else    //数据格式正确是不会执行到这
+            {
+                u0_printf("数据格式错误\r\n");
+
+            }
+        }
+        else    //buf中没有关键字
+        {
+            u0_printf("cannot find key_word!!!\r\n");
+        }
+    }
+}
 
 
 

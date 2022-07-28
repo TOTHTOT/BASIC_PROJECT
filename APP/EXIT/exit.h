@@ -23,6 +23,7 @@
 #define M4_ENCODE_B GPIO_getInputPinValue(GPIO_PORT_P6, GPIO_PIN3)
 
 
+extern uint8_t car_state;
 
 void EXIT_Init(void);
 

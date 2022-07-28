@@ -82,6 +82,9 @@ void EXIT_Init(void)
 
 }
 
+
+//控制小车状态信息是否打印在串口
+uint8_t car_state = 1;
 #pragma vector=PORT1_VECTOR         //P1口中断向量
 __interrupt void Port_1(void)      //声明中断服务程序，名为Port_1
 {
@@ -90,9 +93,11 @@ __interrupt void Port_1(void)      //声明中断服务程序，名为Port_1
     case P1IV_P1IFG0:
         break;
     case P1IV_P1IFG1:
-        delay_ms(10);      //消抖
+        delay_ms(10);                //消抖
         if (GPIO_getInputPinValue(GPIO_PORT_P1, GPIO_PIN1) == 0)
         {
+            car_state = 1;
+//            Car_Go_Speed(&Car_1, 200);
             printf("按钮2按下\r\n");
         }
         GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN1);
@@ -138,7 +143,8 @@ __interrupt void Port_2(void)
         delay_ms(10);      //消抖
         if (GPIO_getInputPinValue(GPIO_PORT_P2, GPIO_PIN1) == 0)
         {
-            Get_BH1750Data(&h, &l);
+            car_state = 0;
+//            Car_Stop(&Car_1);
             printf("按钮1按下\r\n");
         }
         GPIO_clearInterrupt(GPIO_PORT_P2, GPIO_PIN1);

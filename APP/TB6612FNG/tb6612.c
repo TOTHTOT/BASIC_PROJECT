@@ -188,6 +188,8 @@ void Car_Go(uint32_t location_cm, S_CAR_STATE *car, uint16_t max_speed)
 
 void Car_Go_Speed(S_CAR_STATE *car, uint16_t max_speed)
 {
+    PID_Init();
+    printf("pid初始化\r\n");
     set_pid_target(&car->motro_state[0].seppd, max_speed);
     set_pid_target(&car->motro_state[1].seppd, max_speed);
 //    set_pid_target(&car->motro_state[2].seppd, max_speed);
@@ -209,10 +211,10 @@ void Car_Stop(S_CAR_STATE *car)
     {
         Car_Direction(stop, i);
     }
+    car->pid_en = 0;
+    car->direction = stop;
     Timer_A_setCompareValue(TIMER_A0_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_1, 0);
     Timer_A_setCompareValue(TIMER_A0_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_2, 0);
-    Timer_A_setCompareValue(TIMER_A0_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_3, 0);
-    Timer_A_setCompareValue(TIMER_A0_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_4, 0);
 
     printf("停止\r\n");
 }
@@ -223,15 +225,15 @@ void Car_Stop(S_CAR_STATE *car)
  * @param {S_MOTOR_STATE} *motor
  * @return {*}
  */
-float Car_Speed_PID(S_MOTOR_STATE *motor)
+float  Car_Speed_PID(S_MOTOR_STATE *motor)
 {
     float actual_speed = 0.0;
     float cont_value = 0.0;
     //单位时间内的脉冲数转换成速度
-    actual_speed = ((float)motor->encode_num /Car_MOTOR_PULSE_PER_CYCLE) * (60.0 * 1000.0 / 50); // rpm
+    actual_speed = ((float)motor->encode_num /Car_MOTOR_PULSE_PER_CYCLE) * (60.0 * 1000.0 / Car_PID_CYCLE); // rpm
 //    printf("actual2_speed:%f\r\n", actual_speed);
     cont_value = speed_pid_realize(&motor->seppd, actual_speed);
-    printf("con2t_value:%f\r\n", cont_value);
+//    printf("con2t_value:%f\r\n", cont_value);
     return cont_value;
 }
 
@@ -303,56 +305,34 @@ void Location_Speed_Control(S_CAR_STATE *car)
  */
 void Motor_Output(S_CAR_STATE car)
 {
-    printf("m2_1:%d\r\n", (int)car.motro_state[1].speed_output_value_finally);
+//    printf("m2_1:%d\r\n", (int)car.motro_state[1].speed_output_value_finally);
 
-    if (car.motro_state[0].speed_output_value_finally >= 0) //正转
-    {
-        Car_Direction(zhengzhuan, 1);
-    }
-    else
-    {
-        Car_Direction(fanzhuan, 1);
-        car.motro_state[0].speed_output_value_finally = -car.motro_state[0].speed_output_value_finally;
-    }
+//    if (car.motro_state[0].speed_output_value_finally >= 0) //正转
+//    {
+//        Car_Direction(zhengzhuan, 1);
+//    }
+//    else
+//    {
+//        Car_Direction(fanzhuan, 1);
+//        car.motro_state[0].speed_output_value_finally = -car.motro_state[0].speed_output_value_finally;
+//    }
     car.motro_state[0].speed_output_value_finally = car.motro_state[0].speed_output_value_finally > Car_MAXPWM ? Car_MAXPWM : car.motro_state[0].speed_output_value_finally; //是否超出最大PWM限幅
 
-    if (car.motro_state[1].speed_output_value_finally >= 0) //正转
-    {
-        Car_Direction(zhengzhuan, 2);
-    }
-    else
-    {
-        Car_Direction(fanzhuan, 2);
-        car.motro_state[1].speed_output_value_finally = -car.motro_state[1].speed_output_value_finally;
-    }
+//    if (car.motro_state[1].speed_output_value_finally >= 0) //正转
+//    {
+//        Car_Direction(zhengzhuan, 2);
+//    }
+//    else
+//    {
+//        Car_Direction(fanzhuan, 2);
+//        car.motro_state[1].speed_output_value_finally = -car.motro_state[1].speed_output_value_finally;
+//    }
     car.motro_state[1].speed_output_value_finally = car.motro_state[1].speed_output_value_finally > Car_MAXPWM ? Car_MAXPWM : car.motro_state[1].speed_output_value_finally; //是否超出最大PWM限幅
 
-    if (car.motro_state[2].speed_output_value_finally >= 0) //正转
-    {
-        Car_Direction(zhengzhuan, 3);
-    }
-    else
-    {
-        Car_Direction(fanzhuan, 3);
-        car.motro_state[2].speed_output_value_finally = -car.motro_state[2].speed_output_value_finally;
-    }
-    car.motro_state[2].speed_output_value_finally = car.motro_state[2].speed_output_value_finally > Car_MAXPWM ? Car_MAXPWM : car.motro_state[2].speed_output_value_finally; //是否超出最大PWM限幅
-
-    if (car.motro_state[3].speed_output_value_finally >= 0) //正转
-    {
-        Car_Direction(zhengzhuan, 4);
-    }
-    else
-    {
-        Car_Direction(fanzhuan, 4);
-        car.motro_state[3].speed_output_value_finally = -car.motro_state[3].speed_output_value_finally;
-    }
-    car.motro_state[3].speed_output_value_finally = car.motro_state[3].speed_output_value_finally > Car_MAXPWM ? Car_MAXPWM : car.motro_state[3].speed_output_value_finally; //是否超出最大PWM限幅
-    printf("m2:%d\r\n", (int)car.motro_state[1].speed_output_value_finally);
+//    printf("m2:%d\r\n", (int)car.motro_state[1].speed_output_value_finally);
     Timer_A_setCompareValue(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_1, (int)car.motro_state[0].speed_output_value_finally);
     Timer_A_setCompareValue(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_2, (int)car.motro_state[1].speed_output_value_finally);
-    Timer_A_setCompareValue(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_3, (int)car.motro_state[2].speed_output_value_finally);
-    Timer_A_setCompareValue(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_4, (int)car.motro_state[3].speed_output_value_finally);
+
 //    TIM_SetCompare1(TIM2, (int)car.motro_state[0].speed_output_value_finally); //设置M1的PWM
 //    TIM_SetCompare2(TIM2, (int)car.motro_state[1].speed_output_value_finally); //设置M2的PWM
 //    TIM_SetCompare3(TIM2, (int)car.motro_state[2].speed_output_value_finally); //设置M3的PWM
