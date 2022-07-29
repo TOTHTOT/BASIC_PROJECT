@@ -167,40 +167,40 @@ void TIMERB0_ISR(void)
     {
         BEEP_High;
     }
-//    Motor_Straight_Control_Num += Car_Staright_Control();
-    if (Car_1.pid_en == 1)
-    {
-        pid_i = 0;
-        Motor_Straight_Control_Num = Car_Staright_Control();
-        Car_1.motro_state[0].speed_output_value = Car_Speed_PID(
-                &Car_1.motro_state[0]);
-
-        Car_1.motro_state[0].speed_output_value_finally =
-                Car_1.motro_state[0].speed_output_value / 0.6
-                        - (Motor_Straight_Control_Num * 1.0);
-        Car_1.motro_state[1].speed_output_value = Car_Speed_PID(
-                &Car_1.motro_state[1]);
-
-        Car_1.motro_state[1].speed_output_value_finally =
-                Car_1.motro_state[1].speed_output_value / 0.6
-                        + (Motor_Straight_Control_Num * 1.0);
-        Motor_Output(Car_1);
-        printf("M1:%f, M2:%f\r\n",
-               ((Car_1.motro_state[0].encode_num / Car_MOTOR_PULSE_PER_CYCLE)
-                       * (60.0 * 1000.0 / Car_PID_CYCLE)) / 0.6,
-
-               ((Car_1.motro_state[1].encode_num / Car_MOTOR_PULSE_PER_CYCLE)
-                       * (60.0 * 1000.0 / Car_PID_CYCLE)) / 0.6);
-        Car_1.motro_state[0].encode_num = 0;
-        Car_1.motro_state[1].encode_num = 0;
-    }
-//    不使用PID根据单位时间内脉冲时间计算速度
-    if(car_state == 1)
-    {
-        printf("%d, %d\r\n", Car_1.motro_state[0].encode_num, Car_1.motro_state[1].encode_num);
+////    Motor_Straight_Control_Num += Car_Staright_Control();
+//    if (Car_1.pid_en == 1)
+//    {
+//        pid_i = 0;
+//        Motor_Straight_Control_Num = Car_Staright_Control();
+//        Car_1.motro_state[0].speed_output_value = Car_Speed_PID(
+//                &Car_1.motro_state[0]);
+//
+//        Car_1.motro_state[0].speed_output_value_finally =
+//                Car_1.motro_state[0].speed_output_value / 0.6
+//                        - (Motor_Straight_Control_Num * 1.0);
+//        Car_1.motro_state[1].speed_output_value = Car_Speed_PID(
+//                &Car_1.motro_state[1]);
+//
+//        Car_1.motro_state[1].speed_output_value_finally =
+//                Car_1.motro_state[1].speed_output_value / 0.6
+//                        + (Motor_Straight_Control_Num * 1.0);
+//        Motor_Output(Car_1);
+//        printf("M1:%f, M2:%f\r\n",
+//               ((Car_1.motro_state[0].encode_num / Car_MOTOR_PULSE_PER_CYCLE)
+//                       * (60.0 * 1000.0 / Car_PID_CYCLE)) / 0.6,
+//
+//               ((Car_1.motro_state[1].encode_num / Car_MOTOR_PULSE_PER_CYCLE)
+//                       * (60.0 * 1000.0 / Car_PID_CYCLE)) / 0.6);
 //        Car_1.motro_state[0].encode_num = 0;
 //        Car_1.motro_state[1].encode_num = 0;
-    }
+//    }
+//    不使用PID根据单位时间内脉冲时间计算速度
+//    if(car_state == 1)
+//    {
+////        printf("%d, %d\r\n", Car_1.motro_state[0].encode_num, Car_1.motro_state[1].encode_num);
+////        Car_1.motro_state[0].encode_num = 0;
+////        Car_1.motro_state[1].encode_num = 0;
+//    }
 }
 
 

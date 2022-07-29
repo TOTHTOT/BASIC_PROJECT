@@ -11,7 +11,11 @@
 #include "mpu6050.h"
 #include "config.h"
 #include "tb6612.h"
+#include "pid.h"
 char i;
+extern float Target_value, Actual_value;
+extern float Target_value2, Actual_value2;
+short M1_encode_num,M2_encode_num;
 float Angle_Balance, Gyro_Balance;           //平衡倾角 平衡陀螺仪 转向陀螺仪
         /* EXIT_Init
          * 描述:外部中断初始化,两个按键
@@ -85,6 +89,7 @@ void EXIT_Init(void)
 
 //控制小车状态信息是否打印在串口
 uint8_t car_state = 1;
+extern uint8_t pid_en;
 #pragma vector=PORT1_VECTOR         //P1口中断向量
 __interrupt void Port_1(void)      //声明中断服务程序，名为Port_1
 {
@@ -96,9 +101,15 @@ __interrupt void Port_1(void)      //声明中断服务程序，名为Port_1
         delay_ms(10);                //消抖
         if (GPIO_getInputPinValue(GPIO_PORT_P1, GPIO_PIN1) == 0)
         {
-            car_state = 1;
+            set_pid_target(&speed_pid_m1,200);
+            set_pid_target(&speed_pid_m2,200);
+
+//            speed_pid_m1.target_val = 200;
+//            speed_pid_m2.target_val = 200;
+            pid_en = 1;
+
 //            Car_Go_Speed(&Car_1, 200);
-            printf("按钮2按下\r\n");
+            printf("启动\r\n");
         }
         GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN1);
         break;
@@ -118,7 +129,6 @@ __interrupt void Port_1(void)      //声明中断服务程序，名为Port_1
         break;
     }
 }
-
 #pragma vector=PORT2_VECTOR
 __interrupt void Port_2(void)
 {
@@ -128,14 +138,16 @@ __interrupt void Port_2(void)
     case P2IV_P2IFG0:       //对M1脉冲计数,在计算完速度后清零encode_num
         if (M1_ENCODE_B == 0)
         {
-            Car_1.motro_state[0].encode_num++;
-            Car_1.motro_state[0].total_encode_num += Car_1.motro_state[0].encode_num; //总脉冲数相加
+            M1_encode_num++;
 
+//            Car_1.motro_state[0].encode_num++;
+//            Car_1.motro_state[0].total_encode_num += Car_1.motro_state[0].encode_num; //总脉冲数相加
         }
-        if (M1_ENCODE_B == 1)
+        else if (M1_ENCODE_B == 1)
         {
-            Car_1.motro_state[0].encode_num--;
-            Car_1.motro_state[0].total_encode_num += Car_1.motro_state[0].encode_num; //总脉冲数相加
+            M1_encode_num--;
+//            Car_1.motro_state[0].encode_num--;
+//            Car_1.motro_state[0].total_encode_num += Car_1.motro_state[0].encode_num; //总脉冲数相加
         }
         GPIO_clearInterrupt(GPIO_PORT_P2, GPIO_PIN0);
         break;
@@ -152,13 +164,15 @@ __interrupt void Port_2(void)
     case P2IV_P2IFG2:
         if (M2_ENCODE_B == 0)
         {
-            Car_1.motro_state[1].encode_num--;
-            Car_1.motro_state[1].total_encode_num += Car_1.motro_state[1].encode_num; //总脉冲数相加
+            M2_encode_num--;
+//            Car_1.motro_state[1].encode_num--;
+//            Car_1.motro_state[1].total_encode_num += Car_1.motro_state[1].encode_num; //总脉冲数相加
         }
         else if (M2_ENCODE_B == 1)
         {
-            Car_1.motro_state[1].encode_num++;
-            Car_1.motro_state[1].total_encode_num += Car_1.motro_state[1].encode_num; //总脉冲数相加
+            M2_encode_num++;
+//            Car_1.motro_state[1].encode_num++;
+//            Car_1.motro_state[1].total_encode_num += Car_1.motro_state[1].encode_num; //总脉冲数相加
         }
         GPIO_clearInterrupt(GPIO_PORT_P2, GPIO_PIN2);
         break;

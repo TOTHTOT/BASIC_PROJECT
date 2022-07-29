@@ -27,13 +27,14 @@ short Car_Staright_Control(void)
     else if(LIFT_GRAYSENSOR == 1 && RIGHT_GRAYSENSOR == 0)
     {
         printf("×ó±ß\r\n");
-        return 140;
+        return 230;
     }
     else if(LIFT_GRAYSENSOR == 0  && RIGHT_GRAYSENSOR == 1)
     {
         printf("ÓÒ±ß\r\n");
-        return -130;
+        return -230;
     }
+    return 0;
 }
 
 

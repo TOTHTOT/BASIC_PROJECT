@@ -22,9 +22,13 @@ extern uint16_t USART0_RX_STA;                //接收状态标记
 
 typedef struct
 {
-    uint16_t L_or_R;
     uint16_t output;
+    uint16_t distance;  //跟随车距离领头车的距离
+    uint16_t stop_flag; //领头车停止
+    uint16_t num;       //圈数
+
 }S_CAMERA_H;
+
 extern S_CAMERA_H OPENMV_Data;
 
 char Uart_Init(uint16_t baseAddress, uint32_t Baudrate);

@@ -13,7 +13,7 @@
 #include "stdlib.h"
 #include "graysensor.h"
 #include "beep.h"
-
+extern uint8_t CAR;
 /* 串口初始化
  * 参数:baseAddress:为USCI_A0_BASE或USCI_A1_BASE, Baudrate:波特率
  * */
@@ -175,17 +175,37 @@ __interrupt void USCI_A0_ISR (void)
 //            printf("接收数据为:%s", USART_RX_BUF);
             if(USART0_RX_BUF[0]==0x01)
             {
-
-                Get_Data_From_Buf(USART0_RX_BUF, 1, ",", &OPENMV_Data);
-                if(OPENMV_Data.L_or_R == 1)
+                if(CAR == 1)
                 {
-                    huidu_l_en = huidu_r_en = 0;
-                    beep_en= 1;
-                    printf("接收到停止灰度指令\r\n");
+                    Get_Data_From_Buf(USART0_RX_BUF, 3, ",", &OPENMV_Data);
+
                 }
+                if(CAR == 2)
+                {
+                    Get_Data_From_Buf(USART0_RX_BUF, 3, ",", &OPENMV_Data);
+                    if(OPENMV_Data.stop_flag == 1)
+                    {
+//                        beep_en = 1;
+                        Car_Direction(stop, 1);
+                        Car_Direction(stop, 2);
+                    }
+                }
+//                if(OPENMV_Data.L_or_R == 1)
+//                {
+////                  huidu_l_en = huidu_r_en = 0;
+////                  beep_en= 1;
+//
+//                  printf("接收到停止灰度指令\r\n");
+//                }
+//                if(OPENMV_Data.L_or_R == 1)
+//                {
+//                    huidu_l_en = huidu_r_en = 0;
+//                    beep_en= 1;
+//                    printf("接收到停止灰度指令\r\n");
+//                }
 
 //                printf("LoR:%d\r\n", OPENMV_Data.x);
-//                printf("y:%d\r\n", OPENMV_Data.y);
+//                printf("y:%d\r\n", OPENMV_Data.output);
             }
 
             USART0_RX_STA = 0;
@@ -197,6 +217,9 @@ __interrupt void USCI_A0_ISR (void)
     }
 }
 
+extern float M1_OUTPWM, M2_OUTPWM;
+extern float Target_value, Actual_value;
+extern float Target_value2, Actual_value2;
 //******************************************************************************
 //
 //This is the USCI_A1 interrupt vector service routine.
@@ -208,14 +231,14 @@ uint16_t USART_RX_STA = 0; //接收状态标记
 __interrupt void USCI_A1_ISR (void)
 {
     uint8_t receivedData = 0;
-
+    uint8_t str[50];
     switch (__even_in_range(UCA1IV, 4))
     {
     //Vector 2 - RXIFG
     case 2:
         receivedData = USCI_A_UART_receiveData(USCI_A1_BASE);
 //        USCI_A_UART_transmitData(USCI_A1_BASE, receivedData);
-        if (receivedData == 0xfd)
+        if (receivedData == 0x01)
         {
             // 接收到头帧0xfd,从头开始接收
             USART_RX_STA = 0;
@@ -245,7 +268,66 @@ __interrupt void USCI_A1_ISR (void)
         //接收完成作相应处理
         if((USART_RX_STA & 0x8000))
         {
-            printf("接收数据为:%s", USART_RX_BUF);
+//            printf("接收数据为:%s", USART_RX_BUF);
+            if (USART_RX_BUF[0] == 0x01)
+            {
+                if(CAR == 1)
+                {
+                    Get_Data_From_Buf(USART_RX_BUF, 3, ",", &OPENMV_Data);
+                    if (OPENMV_Data.stop_flag == 1)
+                    {
+                        printf("停止\r\n");
+                        beep_en = 1;
+                        //                    01 2c 30 30 32 2c 31 34 33 2c 31 2c 0d 0a
+                        sprintf(str, "%c,%d,%d,%d,\r\n", 0x01, 0, 0, 1);
+                        u0_printf(str);
+                        Car_Direction(stop, 1);
+                        Car_Direction(stop, 2);
+                    }
+                }
+                if(CAR == 2)
+                {
+                    Get_Data_From_Buf(USART_RX_BUF, 3, ",", &OPENMV_Data);
+                    if (OPENMV_Data.distance < 200) //跟随车距离小于20cm就减速
+                    {
+                        //                    if()
+                        //小于时立马设置目标速度小些
+                        printf("减速\r\n");
+                        //                    Target_value = Target_value - 150;
+                        //                    Target_value2 = Target_value2 - 150;
+                        Timer_A_setCompareValue(
+                                TIMER_A0_BASE,
+                                TIMER_A_CAPTURECOMPARE_REGISTER_2,
+                                (int) M2_OUTPWM - 200);
+                        Timer_A_setCompareValue(
+                                TIMER_A0_BASE,
+                                TIMER_A_CAPTURECOMPARE_REGISTER_1,
+                                (int) M2_OUTPWM - 200);
+                    }
+                }
+//                //领头车 和跟随车的times不一样
+//                if(OPENMV_Data.distance < 200) //跟随车距离小于20cm就减速
+//                {
+////                    if()
+//                    //小于时立马设置目标速度小些
+//                    printf("减速\r\n");
+////                    Target_value = Target_value - 150;
+////                    Target_value2 = Target_value2 - 150;
+//                    Timer_A_setCompareValue(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_2,(int)M2_OUTPWM-200 );
+//                    Timer_A_setCompareValue(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_1,(int)M2_OUTPWM -200);
+//                }
+//
+//                if(OPENMV_Data.stop_flag == 1)
+//                {
+//                    printf("停止\r\n");
+//                    beep_en = 1;
+////                    01 2c 30 30 32 2c 31 34 33 2c 31 2c 0d 0a
+//                    sprintf(str, "%c,%d,%d,%d,\r\n", 0x01, 0, 0, 1);
+//                    u0_printf(str);
+//                    Car_Direction(stop, 1);
+//                    Car_Direction(stop, 2);
+//                }
+            }
             USART_RX_STA = 0;
             memset((char*)USART_RX_BUF, '0', strlen(USART_RX_BUF));
         }
@@ -310,9 +392,11 @@ void Get_Data_From_Buf(uint8_t *buf, uint8_t times, uint8_t *key_word, S_CAMERA_
                 // u1_printf("22\r\n");
                 memcpy(temp, temp_p, temp_pp- temp_p);
                 if(i == 0)
-                    camera->L_or_R = atoi(( char*)temp);         //字符串转为整型
+                    camera->distance = atoi(( char*)temp);         //字符串转为整型
                 else if(i == 1)
                     camera->output = atoi(( char*)temp);         //字符串转整型
+                else if(i==2)
+                    camera->stop_flag = atoi((char*)temp);
                 else
                     u0_printf("没有定义第三个参数Get_Data_From_Buf\r\n");
                 // u1_printf("1:temp:%s, x:%d, y:%d\r\ntemp_p:%s, temp_pp:%s\r\n", temp, camera->x, camera->y, temp_p, temp_pp);

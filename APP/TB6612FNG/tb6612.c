@@ -87,7 +87,7 @@ void Car_Direction(E_CAR_DIRECTION direction, uint8_t motor)
         {
             M1_AIN1_L;
             M1_AIN2_H; //Õý×ª
-//            printf("1\r\n");
+           printf("1 front\r\n");
         }
         else if (direction == fanzhuan)
         {

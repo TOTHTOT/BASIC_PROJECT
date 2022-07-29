@@ -62,7 +62,7 @@
 #define Car_MOTOR_LINE_NUM 13                                          //线圈线数
 #define Car_MOTOR_COIL (Car_MOTOR_REDUCTION_RATIO *Car_MOTOR_LINE_NUM)   //转一圈输出脉冲
 #define Car_MOTOR_PULSE_PER_CYCLE (Car_FREQUENCY_DOUBLE *Car_MOTOR_COIL) //每转一圈产生的脉冲数 4*260 13*20=260
-#define Car_PID_CYCLE 25
+#define Car_PID_CYCLE 50
 
 
 // 小车方向枚举

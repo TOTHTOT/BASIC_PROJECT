@@ -24,6 +24,7 @@
 
 
 extern uint8_t car_state;
+extern short M1_encode_num,M2_encode_num;
 
 void EXIT_Init(void);
 
