@@ -155,7 +155,7 @@ __interrupt void USCI_A0_ISR (void)
         //接收完成作相应处理
         if ((USART0_RX_STA & 0x8000))
         {
-            u0_printf("接收完成\r\n");
+            // u0_printf("接收完成\r\n");
             if(p = strstr(USART0_RX_BUF, "so")!=NULL)
             {
                  p++;
@@ -177,13 +177,13 @@ __interrupt void USCI_A0_ISR (void)
             {
                 if(CAR == 1)
                 {
-                    Get_Data_From_Buf(USART0_RX_BUF, 3, ",", &OPENMV_Data);
+                    Get_Data_From_Buf(USART0_RX_BUF, 3, ",", &bluetooth);
 
                 }
                 if(CAR == 2)
                 {
-                    Get_Data_From_Buf(USART0_RX_BUF, 3, ",", &OPENMV_Data);
-                    if(OPENMV_Data.stop_flag == 1)
+                    Get_Data_From_Buf(USART0_RX_BUF, 3, ",", &bluetooth);
+                    if(bluetooth.stop_flag == 1)
                     {
 //                        beep_en = 1;
                         Car_Direction(stop, 1);
@@ -228,7 +228,7 @@ extern float Target_value2, Actual_value2;
 uint8_t USART_RX_BUF[USART_REC_LEN]; //接收缓冲,最大USART_REC_LEN个字节.
 uint16_t USART_RX_STA = 0; //接收状态标记
 #pragma vector=USCI_A1_VECTOR
-__interrupt void USCI_A1_ISR (void)
+__interrupt void USCI_A1_ISR (void)//摄像头和msp
 {
     uint8_t receivedData = 0;
     uint8_t str[50];
@@ -276,14 +276,21 @@ __interrupt void USCI_A1_ISR (void)
                     Get_Data_From_Buf(USART_RX_BUF, 3, ",", &OPENMV_Data);
                     if (OPENMV_Data.stop_flag == 1)
                     {
-                        printf("停止\r\n");
+//                        printf("停止\r\n");
                         beep_en = 1;
                         //                    01 2c 30 30 32 2c 31 34 33 2c 31 2c 0d 0a
                         sprintf(str, "%c,%d,%d,%d,\r\n", 0x01, 0, 0, 1);
                         u0_printf(str);
                         Car_Direction(stop, 1);
                         Car_Direction(stop, 2);
+                        OPENMV_Data.stop_flag = 0;
                     }
+                    else if (OPENMV_Data.stop_flag == 0)
+                    {
+                        sprintf(str, "%c,%d,%d,%d,\r\n", 0x01, 0, 0, 0);
+                        u0_printf(str);
+                    }
+
                 }
                 if(CAR == 2)
                 {
@@ -362,7 +369,7 @@ int fputs(const char *_ptr, register FILE *_fp)
   return len;
 }
 
-
+S_CAMERA_H bluetooth;
 S_CAMERA_H OPENMV_Data;
 /**
  * @name: Get_Data_From_Buf
@@ -398,7 +405,7 @@ void Get_Data_From_Buf(uint8_t *buf, uint8_t times, uint8_t *key_word, S_CAMERA_
                 else if(i==2)
                     camera->stop_flag = atoi((char*)temp);
                 else
-                    u0_printf("没有定义第三个参数Get_Data_From_Buf\r\n");
+                    printf("没有定义第三个参数Get_Data_From_Buf\r\n");
                 // u1_printf("1:temp:%s, x:%d, y:%d\r\ntemp_p:%s, temp_pp:%s\r\n", temp, camera->x, camera->y, temp_p, temp_pp);
                 buf = temp_pp;
                 // u1_printf("2:temp:%s, x:%d, y:%d\r\ntemp_p:%s, temp_pp:%s\r\n", temp, camera->x, camera->y, temp_p, temp_pp);
@@ -406,13 +413,13 @@ void Get_Data_From_Buf(uint8_t *buf, uint8_t times, uint8_t *key_word, S_CAMERA_
             }
             else    //数据格式正确是不会执行到这
             {
-                u0_printf("数据格式错误\r\n");
+                printf("数据格式错误\r\n");
 
             }
         }
         else    //buf中没有关键字
         {
-            u0_printf("cannot find key_word!!!\r\n");
+            printf("cannot find key_word!!!\r\n");
         }
     }
 }

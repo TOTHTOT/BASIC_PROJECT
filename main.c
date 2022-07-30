@@ -74,7 +74,7 @@ void main(void)
 //                            700);                    //320
 
 
-    u0_printf("进入主循环\r\n");
+    // u0_printf("进入主循环\r\n");
     beep_en= 1;
     int pianyi;
     while (1)

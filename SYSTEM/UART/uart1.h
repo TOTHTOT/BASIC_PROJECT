@@ -29,6 +29,8 @@ typedef struct
 
 }S_CAMERA_H;
 
+
+extern S_CAMERA_H bluetooth;
 extern S_CAMERA_H OPENMV_Data;
 
 char Uart_Init(uint16_t baseAddress, uint32_t Baudrate);
