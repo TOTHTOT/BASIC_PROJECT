@@ -38,6 +38,7 @@ uint8_t pid_en = 0;
 uint16_t run_time;
 uint16_t run_time_t;
 uint8_t oled_str_time[20];
+uint8_t oled_str_distance[20];
 uint8_t oled_str_target_speed[20];
 void main(void)
 {
@@ -80,6 +81,7 @@ void main(void)
     else if(CAR == 2)
     {
         OLED_ShowString(80, 0, "Car2", 1);
+        OLED_ShowString(0, 4, "juli", 1);
     }
 
 //    M1_OUTPWM = Speed_To_Pwm(200);
@@ -93,6 +95,16 @@ void main(void)
     // u0_printf("进入主循环\r\n");
     beep_en= 1;
     int pianyi;
+    int distance_err;
+    char K;
+    if(CAR==1)
+    {
+        K=0;
+    }
+    if(CAR==2)
+    {
+        K=1;
+    }
     while (1)
     {
         loop_times++;
@@ -106,6 +118,20 @@ void main(void)
                 //u0_printf(str);
                 pianyi = OPENMV_Data.output;
                 //            printf("pianyi:%d\r\n",pianyi);
+//                if(pianyi>100)
+//                {
+//                    pianyi=100;
+//                }
+//                if(pianyi<-100)
+//                {
+//                    pianyi=-100;
+//                }
+                if (OPENMV_Data.distance > 400)
+                {
+                    OPENMV_Data.distance=400;
+                }
+                distance_err=0.1*(OPENMV_Data.distance-200)*K;
+
                 Actual_value = -((float) M1_encode_num
                         / Car_MOTOR_PULSE_PER_CYCLE)
                         * (60.0 * 1000.0 / Car_PID_CYCLE); // rpm
@@ -119,15 +145,24 @@ void main(void)
                         + pianyi;
                 if (M1_OUTPWM > 600)
                     M1_OUTPWM = 600;
+                if(M1_OUTPWM<0)
+                {
+                    M1_OUTPWM=abs(M1_OUTPWM);
+                }
                 Timer_A_setCompareValue(TIMER_A0_BASE,
                                         TIMER_A_CAPTURECOMPARE_REGISTER_1,
                                         (int) M1_OUTPWM);
+
                 if (M2_OUTPWM > 600)
                     M2_OUTPWM = 600;
+                if(M2_OUTPWM<0)
+                {
+                    M2_OUTPWM=abs(M2_OUTPWM);
+                }
                 Timer_A_setCompareValue(TIMER_A0_BASE,
                                         TIMER_A_CAPTURECOMPARE_REGISTER_2,
                                         (int) M2_OUTPWM);
-//                printf("%f, %f, %f ,%f,%d\r\n",Actual_value, Actual_value2, M1_OUTPWM, M2_OUTPWM,pianyi);//
+                printf("%f, %f, %f ,%f,%d\r\n",Actual_value, Actual_value2, M1_OUTPWM, M2_OUTPWM,pianyi);//
                 pianyi = 0;
                 //            printf("%f, %f, %f ,%f\r\n",Actual_value, Actual_value2, M1_OUTPWM, M2_OUTPWM);//
 
@@ -165,6 +200,13 @@ void oled_change_data(void)
         printf("speed2:%d\r\n", oled_speed);
         OLED_ShowString(50, 2, oled_str_target_speed, 1);  //显示速度
         OLED_ShowString(50, 0, oled_str_time, 1);  //显示时间  run_time_t
+        if(CAR == 2)
+        {
+//            sprintf(oled_str_distance, "%d   ", OPENMV_Data.distance);
+//            OLED_ShowString(50, 4, oled_str_distance, 1);  //显示时间  run_time_t
+                        sprintf(oled_str_distance, "%d   ", OPENMV_Data.distance);
+                        OLED_ShowString(50, 4, oled_str_distance, 1);  //显示时间  run_time_t
+        }
 
     }
 }

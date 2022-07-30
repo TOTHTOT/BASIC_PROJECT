@@ -13,6 +13,7 @@
 #include "stdlib.h"
 #include "graysensor.h"
 #include "beep.h"
+#include "oled.h"
 extern uint8_t CAR;
 /* 串口初始化
  * 参数:baseAddress:为USCI_A0_BASE或USCI_A1_BASE, Baudrate:波特率
@@ -295,21 +296,38 @@ __interrupt void USCI_A1_ISR (void)//摄像头和msp
                 if(CAR == 2)
                 {
                     Get_Data_From_Buf(USART_RX_BUF, 3, ",", &OPENMV_Data);
+                    if (OPENMV_Data.distance < 150) //跟随车距离小于20cm就减速
+                    {
+                        //小于时立马设置目标速度小些
+                        printf("停止\r\n");
+//                        speed_pid_m1.target_val = 0;
+//                        speed_pid_m2.target_val = 0;
+                        Car_Direction(stop, 1);
+                        Car_Direction(stop, 2);
+                    }
                     if (OPENMV_Data.distance < 200) //跟随车距离小于20cm就减速
                     {
+//
+//                        speed_pid_m1.target_val = 0;
+//                        speed_pid_m2.target_val = 0;
                         //                    if()
                         //小于时立马设置目标速度小些
                         printf("减速\r\n");
                         //                    Target_value = Target_value - 150;
                         //                    Target_value2 = Target_value2 - 150;
-                        Timer_A_setCompareValue(
-                                TIMER_A0_BASE,
-                                TIMER_A_CAPTURECOMPARE_REGISTER_2,
-                                (int) M2_OUTPWM - 200);
-                        Timer_A_setCompareValue(
-                                TIMER_A0_BASE,
-                                TIMER_A_CAPTURECOMPARE_REGISTER_1,
-                                (int) M2_OUTPWM - 200);
+                        if(OPENMV_Data.distance>500)
+                        {
+                            OPENMV_Data.distance = 500;
+                        }
+//                        Timer_A_setCompareValue(
+//                                TIMER_A0_BASE,
+//                                TIMER_A_CAPTURECOMPARE_REGISTER_2,
+//                                (int) M2_OUTPWM +(int)(0.15*(OPENMV_Data.distance-200)));
+//                        Timer_A_setCompareValue(
+//                                TIMER_A0_BASE,
+//                                TIMER_A_CAPTURECOMPARE_REGISTER_1,
+//                                (int) M2_OUTPWM + (int)(0.15*(OPENMV_Data.distance-200)));
+                        oled_change_data_en = 1;
                     }
                 }
 //                //领头车 和跟随车的times不一样
