@@ -11,6 +11,8 @@
 #include "OLED_Font.h"
 #include "iic.h"
 
+short oled_speed;
+uint8_t oled_change_data_en;
 //OLED的显存
 //存放格式如下.
 //[0]0 1 2 3 ... 127

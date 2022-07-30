@@ -33,6 +33,9 @@
 #define OLED_CMD  0 //写命令
 #define OLED_DATA 1 //写数据
 
+extern short oled_speed;
+extern uint8_t oled_change_data_en;
+
 //OLED控制用函数
 void OLED_WR_Byte(unsigned dat,unsigned cmd);
 void OLED_Display_On(void);

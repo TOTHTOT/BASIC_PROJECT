@@ -12,6 +12,7 @@
 #include "config.h"
 #include "tb6612.h"
 #include "pid.h"
+#include "oled.h"
 char i;
 extern float Target_value, Actual_value;
 extern float Target_value2, Actual_value2;
@@ -127,6 +128,7 @@ __interrupt void Port_1(void)      //声明中断服务程序，名为Port_1
         break;
     }
 }
+static uint8_t key_press_times = 1;
 #pragma vector=PORT2_VECTOR
 __interrupt void Port_2(void)
 {
@@ -154,35 +156,62 @@ __interrupt void Port_2(void)
         delay_ms(10);      //消抖
         if (GPIO_getInputPinValue(GPIO_PORT_P2, GPIO_PIN1) == 0)
         {
-            //按下修改速度
-            while(GPIO_getInputPinValue(GPIO_PORT_P2, GPIO_PIN1) == 0)
+//            key_press_times++;
+            if(key_press_times == 1)
             {
-                key_press_time++;
-                delay_ms(1);
+                oled_speed = 150;
+                key_press_times = 2;
+                speed_pid_m1.target_val = oled_speed;
+                speed_pid_m2.target_val = oled_speed;
             }
-            if(key_press_time>500)
+            else if(key_press_times == 2)
             {
-                printf("speed:200\r\n");
-                set_pid_target(&speed_pid_m1, 200);
-                set_pid_target(&speed_pid_m2, 200);
+                oled_speed = 200;
+                key_press_times = 3;
+                speed_pid_m1.target_val = oled_speed;
+                speed_pid_m2.target_val = oled_speed;
             }
-            else if (key_press_time < 300)
+            else if(key_press_times == 3)
             {
+                oled_speed = 300;
+                key_press_times = 1;
+                speed_pid_m1.target_val = oled_speed;
+                speed_pid_m2.target_val = oled_speed;
 
-                delay_ms(100);
-                if (GPIO_getInputPinValue(GPIO_PORT_P2, GPIO_PIN1) == 0)
-                {
-                    printf("speed:300\r\n");
-                    set_pid_target(&speed_pid_m1, 300);
-                    set_pid_target(&speed_pid_m2, 300);
-                }
-                else
-                {
-                    printf("speed:150\r\n");
-                    set_pid_target(&speed_pid_m1, 150);
-                    set_pid_target(&speed_pid_m2, 150);
-                }
             }
+            oled_change_data_en = 1;
+            printf("speed1%d\r\n", oled_speed);
+
+//
+//            //按下修改速度
+//            while(GPIO_getInputPinValue(GPIO_PORT_P2, GPIO_PIN1) == 0)
+//            {
+//                key_press_time++;
+//                delay_ms(1);
+//            }
+//            if(key_press_time>500)
+//            {
+//                printf("speed:200\r\n");
+//                set_pid_target(&speed_pid_m1, 200);
+//                set_pid_target(&speed_pid_m2, 200);
+//            }
+//            else if (key_press_time < 300)
+//            {
+//
+//                delay_ms(100);
+//                if (GPIO_getInputPinValue(GPIO_PORT_P2, GPIO_PIN1) == 0)
+//                {
+//                    printf("speed:300\r\n");
+//                    set_pid_target(&speed_pid_m1, 300);
+//                    set_pid_target(&speed_pid_m2, 300);
+//                }
+//                else
+//                {
+//                    printf("speed:150\r\n");
+//                    set_pid_target(&speed_pid_m1, 150);
+//                    set_pid_target(&speed_pid_m2, 150);
+//                }
+//            }
             printf("按钮1按下\r\n");
         }
         GPIO_clearInterrupt(GPIO_PORT_P2, GPIO_PIN1);

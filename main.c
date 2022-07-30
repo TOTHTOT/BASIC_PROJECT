@@ -23,8 +23,9 @@
 #include "inv_mpu_dmp_motion_driver.h"
 #endif
 //*****************************************************************************
-uint8_t CAR = 2;
+uint8_t CAR = 1;
 short OUT_PWM(uint8_t motor);
+void oled_change_data(void);
 
 uint16_t status;
 uint8_t clockValue;
@@ -36,7 +37,8 @@ uint8_t str[50];
 uint8_t pid_en = 0;
 uint16_t run_time;
 uint16_t run_time_t;
-
+uint8_t oled_str_time[20];
+uint8_t oled_str_target_speed[20];
 void main(void)
 {
 
@@ -47,8 +49,7 @@ void main(void)
     float err, integral;
     float err2, integral2;
 
-    uint8_t oled_str_time[20];
-    uint8_t oled_str_target_speed[20];
+
 
 
     uint32_t loop_times = 0;
@@ -68,9 +69,19 @@ void main(void)
     PID_Init();
     Car_Direction(fanzhuan, 1);
     Car_Direction(fanzhuan, 2);
-//    OLED_Init();
-//    OLED_Clear();
-//    OLED_ShowString(0, 0, "time:", 1);
+    OLED_Init();
+    OLED_Clear();
+    OLED_ShowString(0, 0, "time:", 1);
+    OLED_ShowString(0, 2, "speed:", 1);
+    if(CAR == 1)
+    {
+        OLED_ShowString(80, 0, "Car1", 1);
+    }
+    else if(CAR == 2)
+    {
+        OLED_ShowString(80, 0, "Car2", 1);
+    }
+
 //    M1_OUTPWM = Speed_To_Pwm(200);
 //    M2_OUTPWM = Speed_To_Pwm(200);
 //    Timer_A_setCompareValue(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_1,
@@ -125,13 +136,39 @@ void main(void)
 
                 M1_encode_num = 0;
                 M2_encode_num = 0;
+                run_time++;
+                if(run_time == 20)
+                {
+                    run_time = 0;
+                    run_time_t++;
+                    oled_change_data_en = 1;
+
+                    printf("%d\r\n", run_time_t);
+                }
 
             }
             loop_times = 0;
         }
+      oled_change_data();
       delay_ms(5);
     }
 }
+
+void oled_change_data(void)
+{
+    if(oled_change_data_en == 1)
+    {
+
+        oled_change_data_en = 0;
+        sprintf(oled_str_time, "%d", run_time_t);
+        sprintf(oled_str_target_speed, "%d", oled_speed);
+        printf("speed2:%d\r\n", oled_speed);
+        OLED_ShowString(50, 2, oled_str_target_speed, 1);  //显示速度
+        OLED_ShowString(50, 0, oled_str_time, 1);  //显示时间  run_time_t
+
+    }
+}
+
 
 short OUT_PWM(uint8_t motor)
 {
@@ -143,7 +180,7 @@ short OUT_PWM(uint8_t motor)
         if (huidu_l_en == 1)
         {
             result = result - Car_Staright_Control();
-
+            OLED_ShowNum(50, 0, run_time_t, 3, 1);
         }
         break;
     case 2:
