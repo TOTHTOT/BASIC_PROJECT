@@ -34,18 +34,21 @@ float Target_value = 0, Actual_value = 0.0;
 float Target_value2 =0, Actual_value2 = 0.0;
 uint8_t str[50];
 uint8_t pid_en = 0;
+uint16_t run_time;
+uint16_t run_time_t;
 
 void main(void)
 {
 
 //200约等于0.5m/s
-    float Kp = 2.1, Ki= 0.06;
+//    float Kp = 2.1, Ki= 0.06;
 //    float Target_value = 170, Actual_value = 0.0;
 //    float Target_value2 =170, Actual_value2 = 0.0;
     float err, integral;
     float err2, integral2;
 
-    u8 *oled_str;
+    uint8_t oled_str_time[20];
+    uint8_t oled_str_target_speed[20];
 
 
     uint32_t loop_times = 0;
@@ -65,13 +68,15 @@ void main(void)
     PID_Init();
     Car_Direction(fanzhuan, 1);
     Car_Direction(fanzhuan, 2);
-
+//    OLED_Init();
+//    OLED_Clear();
+//    OLED_ShowString(0, 0, "time:", 1);
 //    M1_OUTPWM = Speed_To_Pwm(200);
 //    M2_OUTPWM = Speed_To_Pwm(200);
 //    Timer_A_setCompareValue(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_1,
-//                            700);                    //500
+//                            500);                    //500
 //    Timer_A_setCompareValue(TIMER_A0_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_2,
-//                            700);                    //320
+//                            500);                    //320
 
 
     // u0_printf("进入主循环\r\n");
@@ -83,6 +88,7 @@ void main(void)
 //        计算PID
         if(loop_times == 10)
         {
+//            printf("pid_en%d",pid_en);
             if(pid_en==1)
             {
                 //sprintf(str, "%d", OPENMV_Data.distance);
@@ -110,7 +116,7 @@ void main(void)
                 Timer_A_setCompareValue(TIMER_A0_BASE,
                                         TIMER_A_CAPTURECOMPARE_REGISTER_2,
                                         (int) M2_OUTPWM);
-                //            printf("%f, %f, %f ,%f,%d\r\n",Actual_value, Actual_value2, M1_OUTPWM, M2_OUTPWM,pianyi);//
+                printf("%f, %f, %f ,%f,%d\r\n",Actual_value, Actual_value2, M1_OUTPWM, M2_OUTPWM,pianyi);//
                 pianyi = 0;
                 //            printf("%f, %f, %f ,%f\r\n",Actual_value, Actual_value2, M1_OUTPWM, M2_OUTPWM);//
 
@@ -119,8 +125,9 @@ void main(void)
 
                 M1_encode_num = 0;
                 M2_encode_num = 0;
-            }
+//                run_time++;
 
+            }
             loop_times = 0;
         }
 
