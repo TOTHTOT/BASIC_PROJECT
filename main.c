@@ -116,7 +116,7 @@ void main(void)
                 Timer_A_setCompareValue(TIMER_A0_BASE,
                                         TIMER_A_CAPTURECOMPARE_REGISTER_2,
                                         (int) M2_OUTPWM);
-                printf("%f, %f, %f ,%f,%d\r\n",Actual_value, Actual_value2, M1_OUTPWM, M2_OUTPWM,pianyi);//
+//                printf("%f, %f, %f ,%f,%d\r\n",Actual_value, Actual_value2, M1_OUTPWM, M2_OUTPWM,pianyi);//
                 pianyi = 0;
                 //            printf("%f, %f, %f ,%f\r\n",Actual_value, Actual_value2, M1_OUTPWM, M2_OUTPWM);//
 
@@ -125,13 +125,10 @@ void main(void)
 
                 M1_encode_num = 0;
                 M2_encode_num = 0;
-//                run_time++;
 
             }
             loop_times = 0;
         }
-
-
       delay_ms(5);
     }
 }
