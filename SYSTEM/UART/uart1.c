@@ -111,25 +111,27 @@ void u0_printf(unsigned char *ptr)    //Send string.
 //******************************************************************************
 uint8_t USART0_RX_BUF[USART0_REC_LEN]; //接收缓冲,最大USART_REC_LEN个字节.
 uint16_t USART0_RX_STA = 0; //接收状态标记
+extern uint8_t pid_en;
+
 #pragma vector=USCI_A0_VECTOR
 __interrupt void USCI_A0_ISR (void)
 {
     uint8_t receivedData = 0;
     uint8_t temp[3];
     uint8_t *p;
+//    u0_printf("USCI_A0_ISR\r\n");
 //    printf("USCI_A0_ISR\r\n");
     switch (__even_in_range(UCA0IV,4))
     {
     //Vector 2 - RXIFG
     case 2:
         receivedData = USCI_A_UART_receiveData(USCI_A0_BASE);
-        USCI_A_UART_transmitData(USCI_A0_BASE, receivedData);
-//        printf("USCI_A0_ISR\r\n");
-//        if (receivedData == 0x01)
-//        {
-//            // 接收到头帧0xfd,从头开始接收
-//            USART0_RX_STA = 0;
-//        }
+        //        USCI_A_UART_transmitData(USCI_A1_BASE, receivedData);
+        if (receivedData == 0x01)
+        {
+            // 接收到头帧0xfd,从头开始接收
+            USART0_RX_STA = 0;
+        }
         if ((USART0_RX_STA & 0x8000) == 0) //接收未完成
         {
             if (USART0_RX_STA & 0x4000) //接收到了0x0d
@@ -155,37 +157,31 @@ __interrupt void USCI_A0_ISR (void)
         //接收完成作相应处理
         if ((USART0_RX_STA & 0x8000))
         {
-            // u0_printf("接收完成\r\n");
-            if(p = strstr(USART0_RX_BUF, "so")!=NULL)
-            {
-                 p++;
-                 memcpy(temp, p, 3);
-                graysensor = atoi(temp);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    printf("gray:%d\r\n", graysensor);
-            }
-            else if(p = strstr(USART0_RX_BUF, "go")!=NULL)
-            {
-//                Car_Go_Speed(&Car_1, 200);
-            }
-            else if (p = strstr(USART0_RX_BUF, "stop") != NULL)
-            {
-                Car_Stop(&Car_1);
-            }
-//            if()
+             printf("接收完成\r\n");
 //            printf("接收数据为:%s", USART_RX_BUF);
             if(USART0_RX_BUF[0]==0x01)
             {
-                if(CAR == 1)
+                if(CAR == 1)        //小车1接收部分
                 {
                     Get_Data_From_Buf(USART0_RX_BUF, 3, ",", &bluetooth);
 
                 }
-                if(CAR == 2)
+                if(CAR == 2)        //小车2接收部分
                 {
                     Get_Data_From_Buf(USART0_RX_BUF, 3, ",", &bluetooth);
-                    if(bluetooth.stop_flag == 1)
+                    if (bluetooth.distance == 1)    //允许前进
                     {
-//                        beep_en = 1;
+                       pid_en = 1;
+                    }
+                    if (bluetooth.output != 0)      //速度
+                    {
+                        speed_pid_m1.target_val = bluetooth.output;
+                        speed_pid_m2.target_val = bluetooth.output;
+//                        oled_speed  = speed_pid_m1.target_val;
+                    }
+                    if(bluetooth.stop_flag == 1)    //停止位
+                    {
+//                        beep_en =
                         Car_Direction(stop, 1);
                         Car_Direction(stop, 2);
                     }
@@ -281,6 +277,13 @@ __interrupt void USCI_A1_ISR (void)//摄像头和msp
                         //                    01 2c 30 30 32 2c 31 34 33 2c 31 2c 0d 0a
                         sprintf(str, "%c,%d,%d,%d,\r\n", 0x01, 0, 0, 1);
                         u0_printf(str);
+                        u0_printf(str);
+                        u0_printf(str);
+                        u0_printf(str);
+                        u0_printf(str);
+                        u0_printf(str);
+                        u0_printf(str);
+                        u0_printf(str);
                         Car_Direction(stop, 1);
                         Car_Direction(stop, 2);
                         OPENMV_Data.stop_flag = 0;
@@ -302,14 +305,14 @@ __interrupt void USCI_A1_ISR (void)//摄像头和msp
                         printf("减速\r\n");
                         //                    Target_value = Target_value - 150;
                         //                    Target_value2 = Target_value2 - 150;
-                        Timer_A_setCompareValue(
-                                TIMER_A0_BASE,
-                                TIMER_A_CAPTURECOMPARE_REGISTER_2,
-                                (int) M2_OUTPWM - 200);
-                        Timer_A_setCompareValue(
-                                TIMER_A0_BASE,
-                                TIMER_A_CAPTURECOMPARE_REGISTER_1,
-                                (int) M2_OUTPWM - 200);
+//                        Timer_A_setCompareValue(
+//                                TIMER_A0_BASE,
+//                                TIMER_A_CAPTURECOMPARE_REGISTER_2,
+//                                (int) M2_OUTPWM - 200);
+//                        Timer_A_setCompareValue(
+//                                TIMER_A0_BASE,
+//                                TIMER_A_CAPTURECOMPARE_REGISTER_1,
+//                                (int) M2_OUTPWM - 200);
                     }
                 }
 //                //领头车 和跟随车的times不一样
@@ -369,8 +372,8 @@ int fputs(const char *_ptr, register FILE *_fp)
   return len;
 }
 
-S_CAMERA_H bluetooth;
-S_CAMERA_H OPENMV_Data;
+S_CAMERA_H bluetooth;   //第一位允许前进,第二位速度(暂定),第三位停止
+S_CAMERA_H OPENMV_Data; //第一位距离,第二位偏移量,第三位停止
 /**
  * @name: Get_Data_From_Buf
  * @msg: 从缓存中解析数据,解析一个数据最大为6位数
@@ -406,7 +409,7 @@ void Get_Data_From_Buf(uint8_t *buf, uint8_t times, uint8_t *key_word, S_CAMERA_
                     camera->stop_flag = atoi((char*)temp);
                 else
                     printf("没有定义第三个参数Get_Data_From_Buf\r\n");
-                // u1_printf("1:temp:%s, x:%d, y:%d\r\ntemp_p:%s, temp_pp:%s\r\n", temp, camera->x, camera->y, temp_p, temp_pp);
+//                 u1_printf("1:temp:%s, x:%d, y:%d\r\ntemp_p:%s, temp_pp:%s\r\n", temp, camera->x, camera->y, temp_p, temp_pp);
                 buf = temp_pp;
                 // u1_printf("2:temp:%s, x:%d, y:%d\r\ntemp_p:%s, temp_pp:%s\r\n", temp, camera->x, camera->y, temp_p, temp_pp);
                 memset(temp, '\0', sizeof(temp));

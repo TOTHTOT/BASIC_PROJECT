@@ -21,7 +21,8 @@
 //[5]0 1 2 3 ... 127
 //[6]0 1 2 3 ... 127
 //[7]0 1 2 3 ... 127
-
+short oled_speed;
+uint8_t oled_change_data_en;
 uint16_t TxData = 0;
 void Write_IIC_Command(unsigned char I2C_Command)//Ğ´ÃüÁî
 {

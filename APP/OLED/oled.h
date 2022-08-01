@@ -53,6 +53,7 @@ void fill_picture(unsigned char fill_Data);
 void Write_IIC_Command(unsigned char IIC_Command);
 void Write_IIC_Data(unsigned char IIC_Data);
 void Write_IIC_Byte(unsigned char IIC_Byte);
-
+extern short oled_speed;
+extern uint8_t oled_change_data_en;
 #endif /* OLED_OLED_H_ */
 
